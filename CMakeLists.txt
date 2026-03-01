@@ -1,5 +1,5 @@
 project(lwext4 C)
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.10)
 
 
 include_directories(include)
@@ -32,8 +32,9 @@ elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL  msp430g2210)
 elseif(LIB_ONLY)
     add_definitions(-DCONFIG_DEBUG_PRINTF=0)
     add_definitions(-DCONFIG_DEBUG_ASSERT=0)
-    add_definitions(-DCONFIG_HAVE_OWN_OFLAGS=1)
+    add_definitions(-DCONFIG_HAVE_OWN_OFLAGS=0)
     add_definitions(-DCONFIG_HAVE_OWN_ERRNO=0)
+    add_definitions(-DCONFIG_HAVE_OWN_ASSERT=0)
     add_definitions(-DCONFIG_BLOCK_DEV_CACHE_SIZE=16)
 else()
     #Generic example target
