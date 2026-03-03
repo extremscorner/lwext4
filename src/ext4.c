@@ -1475,7 +1475,7 @@ int ext4_ftruncate(ext4_file *f, uint64_t size)
 	if (f->mp->fs.read_only)
 		return EROFS;
 
-	if (f->flags & O_RDONLY)
+	if ((f->flags & O_ACCMODE) == O_RDONLY)
 		return EPERM;
 
 	EXT4_MP_LOCK(f->mp);
@@ -1508,7 +1508,7 @@ int ext4_fread(ext4_file *file, void *buf, size_t size, size_t *rcnt)
 
 	ext4_assert(file && file->mp);
 
-	if (file->flags & O_WRONLY)
+	if ((file->flags & O_ACCMODE) == O_WRONLY)
 		return EPERM;
 
 	if (!size)
@@ -1671,7 +1671,7 @@ int ext4_fwrite(ext4_file *file, const void *buf, size_t size, size_t *wcnt)
 	if (file->mp->fs.read_only)
 		return EROFS;
 
-	if (file->flags & O_RDONLY)
+	if ((file->flags & O_ACCMODE) == O_RDONLY)
 		return EPERM;
 
 	if (!size)

@@ -45,6 +45,10 @@ extern "C" {
 
 #if CONFIG_HAVE_OWN_OFLAGS
 
+ #ifndef O_ACCMODE
+ #define O_ACCMODE (O_RDONLY | O_WRONLY | O_RDWR)
+ #endif
+
  #ifndef O_RDONLY
  #define O_RDONLY 00
  #endif
