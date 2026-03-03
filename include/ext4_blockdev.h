@@ -66,6 +66,10 @@ struct ext4_blockdev_iface {
 	int (*bwrite)(struct ext4_blockdev *bdev, const void *buf,
 		      uint64_t blk_id, uint32_t blk_cnt);
 
+	/**@brief   Flush device function. Not mandatory field.
+	 * @param   bdev block device.*/
+	int (*flush)(struct ext4_blockdev *bdev);
+
 	/**@brief   Close device function.
 	 * @param   bdev block device.*/
 	int (*close)(struct ext4_blockdev *bdev);
