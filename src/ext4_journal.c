@@ -852,7 +852,7 @@ jbd_iterate_block_table(struct jbd_fs *jbd_fs,
 }
 
 static void jbd_display_block_tags(struct jbd_fs *jbd_fs,
-				   struct tag_info *tag_info,
+				   struct tag_info *tag_info __unused,
 				   void *arg)
 {
 	uint32_t *iblock = arg;

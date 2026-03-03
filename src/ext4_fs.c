@@ -809,7 +809,7 @@ void ext4_fs_inode_blocks_init(struct ext4_fs *fs,
 
 	/* Reset blocks array. For inode which is not directory or file, just
 	 * fill in blocks with 0 */
-	switch (ext4_inode_type(&fs->sb, inode_ref->inode)) {
+	switch (ext4_inode_type(&fs->sb, inode)) {
 	case EXT4_INODE_MODE_FILE:
 	case EXT4_INODE_MODE_DIRECTORY:
 		break;
