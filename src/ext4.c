@@ -1511,6 +1511,9 @@ int ext4_fread(ext4_file *file, void *buf, size_t size, size_t *rcnt)
 	if ((file->flags & O_ACCMODE) == O_WRONLY)
 		return EPERM;
 
+	if (rcnt)
+		*rcnt = 0;
+
 	if (!size)
 		return EOK;
 
@@ -1518,9 +1521,6 @@ int ext4_fread(ext4_file *file, void *buf, size_t size, size_t *rcnt)
 
 	struct ext4_fs *const fs = &file->mp->fs;
 	struct ext4_sblock *const sb = &file->mp->fs.sb;
-
-	if (rcnt)
-		*rcnt = 0;
 
 	r = ext4_fs_get_inode_ref(fs, file->inode, &ref);
 	if (r != EOK) {
@@ -1674,6 +1674,9 @@ int ext4_fwrite(ext4_file *file, const void *buf, size_t size, size_t *wcnt)
 	if ((file->flags & O_ACCMODE) == O_RDONLY)
 		return EPERM;
 
+	if (wcnt)
+		*wcnt = 0;
+
 	if (!size)
 		return EOK;
 
@@ -1682,9 +1685,6 @@ int ext4_fwrite(ext4_file *file, const void *buf, size_t size, size_t *wcnt)
 
 	struct ext4_fs *const fs = &file->mp->fs;
 	struct ext4_sblock *const sb = &file->mp->fs.sb;
-
-	if (wcnt)
-		*wcnt = 0;
 
 	r = ext4_fs_get_inode_ref(fs, file->inode, &ref);
 	if (r != EOK) {
@@ -2983,8 +2983,10 @@ int ext4_dir_mk(struct ext4_mountpoint *mp, const char *path)
 
 	/*Check if exist.*/
 	r = ext4_generic_open(&f, mp, path, "r", false, 0, 0);
-	if (r == EOK)
+	if (r == EOK) {
+		r = EEXIST;
 		goto Finish;
+	}
 
 	/*Create new directory.*/
 	r = ext4_generic_open(&f, mp, path, "w", false, 0, 0);
