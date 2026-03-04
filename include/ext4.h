@@ -393,12 +393,21 @@ uint64_t ext4_fsize(ext4_file *file);
 /**@brief Get inode of file/directory/link.
  *
  * @param path    Parh to file/dir/link.
- * @param ret_ino Inode number.
  * @param inode   Inode internals.
+ * @param ret_ino Inode number.
  *
  * @return  Standard error code.*/
 int ext4_raw_inode_fill(struct ext4_mountpoint *mp, const char *path,
 			struct ext4_inode *inode, uint32_t *ret_ino);
+
+/**@brief Get inode of file/directory/link.
+ *
+ * @param ino     Inode number.
+ * @param inode   Inode internals.
+ *
+ * @return  Standard error code.*/
+int ext4_raw_inode_fill2(struct ext4_mountpoint *mp, uint32_t ino,
+			 struct ext4_inode *inode);
 
 /**@brief Check if inode exists.
  *

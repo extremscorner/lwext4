@@ -1312,7 +1312,7 @@ int ext4_fremove(struct ext4_mountpoint *mp, const char *path)
 		ext4_fs_put_inode_ref(&child);
 		ext4_trans_abort(mp);
 		EXT4_MP_UNLOCK(mp);
-		return r;
+		return EISDIR;
 	}
 
 	/*Link count will be zero, the inode should be freed. */
@@ -1913,6 +1913,31 @@ static int ext4_trans_put_inode_ref(struct ext4_mountpoint *mp,
 	return r;
 }
 
+
+int ext4_raw_inode_fill2(struct ext4_mountpoint *mp, uint32_t ino,
+			 struct ext4_inode *inode)
+{
+	int r;
+	struct ext4_inode_ref inode_ref;
+
+	if (!mp)
+		return ENOENT;
+
+	EXT4_MP_LOCK(mp);
+
+	/*Load parent*/
+	r = ext4_fs_get_inode_ref(&mp->fs, ino, &inode_ref);
+	if (r != EOK) {
+		EXT4_MP_UNLOCK(mp);
+		return r;
+	}
+
+	memcpy(inode, inode_ref.inode, sizeof(struct ext4_inode));
+	ext4_fs_put_inode_ref(&inode_ref);
+	EXT4_MP_UNLOCK(mp);
+
+	return r;
+}
 
 int ext4_raw_inode_fill(struct ext4_mountpoint *mp, const char *path,
 			struct ext4_inode *inode, uint32_t *ret_ino)
