@@ -837,7 +837,9 @@ static int ext4_generic_open2(ext4_file *f, struct ext4_mountpoint *mp,
 			if (r != ENOENT)
 				break;
 
-			if (!(f->flags & O_CREAT))
+			if (f->flags & O_CREAT)
+				f->flags &= ~O_EXCL;
+			else
 				break;
 
 			/*O_CREAT allows create new entry*/
@@ -924,6 +926,11 @@ static int ext4_generic_open2(ext4_file *f, struct ext4_mountpoint *mp,
 	}
 
 	if (is_goal) {
+
+		if ((f->flags & O_CREAT) && (f->flags & O_EXCL)) {
+			ext4_fs_put_inode_ref(&ref);
+			return EEXIST;
+		}
 
 		if ((f->flags & O_TRUNC) && (imode == EXT4_INODE_MODE_FILE)) {
 			r = ext4_trunc_inode(mp, ref.index, 0);
