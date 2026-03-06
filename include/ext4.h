@@ -117,6 +117,9 @@ typedef struct ext4_dir {
 /**@brief   Mount point descriptor.*/
 struct ext4_mountpoint {
 
+	/**@brief   Current working directory inode id.*/
+	uint32_t cwd_inode;
+
 	/**@brief   OS dependent lock/unlock functions.*/
 	struct ext4_lock *os_locks;
 
@@ -610,6 +613,13 @@ int ext4_dir_mv(struct ext4_mountpoint *mp, const char *path, const char *new_pa
  *
  * @return  Standard error code.*/
 int ext4_dir_mk(struct ext4_mountpoint *mp, const char *path);
+
+/**@brief   Change working directory.
+ *
+ * @param   path Directory name.
+ *
+ * @return  Standard error code.*/
+int ext4_dir_ch(struct ext4_mountpoint *mp, const char *path);
 
 /**@brief   Directory open.
  *

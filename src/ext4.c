@@ -316,6 +316,7 @@ int ext4_mount(struct ext4_blockdev *bd,
 		return r;
 	}
 
+	mp->cwd_inode = EXT4_INODE_ROOT_INDEX;
 	bd->fs = &mp->fs;
 	return r;
 }
@@ -795,10 +796,21 @@ static int ext4_generic_open2(ext4_file *f, struct ext4_mountpoint *mp,
 	if (name_off)
 		*name_off = 0;
 
-	/*Load root*/
-	r = ext4_fs_get_inode_ref(fs, EXT4_INODE_ROOT_INDEX, &ref);
-	if (r != EOK)
-		return r;
+	if (path[0] == '/') {
+		path += 1;
+
+		if (name_off)
+			*name_off += 1;
+
+		/*Load root*/
+		r = ext4_fs_get_inode_ref(fs, EXT4_INODE_ROOT_INDEX, &ref);
+		if (r != EOK)
+			return r;
+	} else {
+		r = ext4_fs_get_inode_ref(fs, mp->cwd_inode, &ref);
+		if (r != EOK)
+			return r;
+	}
 
 	if (parent_inode)
 		*parent_inode = ref.index;
@@ -986,10 +998,18 @@ static int ext4_create_hardlink(struct ext4_mountpoint *mp, const char *path,
 	struct ext4_fs *const fs = &mp->fs;
 	struct ext4_sblock *const sb = &mp->fs.sb;
 
-	/*Load root*/
-	r = ext4_fs_get_inode_ref(fs, EXT4_INODE_ROOT_INDEX, &ref);
-	if (r != EOK)
-		return r;
+	if (path[0] == '/') {
+		path += 1;
+
+		/*Load root*/
+		r = ext4_fs_get_inode_ref(fs, EXT4_INODE_ROOT_INDEX, &ref);
+		if (r != EOK)
+			return r;
+	} else {
+		r = ext4_fs_get_inode_ref(fs, mp->cwd_inode, &ref);
+		if (r != EOK)
+			return r;
+	}
 
 	len = ext4_path_check(path, &is_goal);
 	while (1) {
@@ -2990,6 +3010,27 @@ int ext4_dir_mk(struct ext4_mountpoint *mp, const char *path)
 
 	/*Create new directory.*/
 	r = ext4_generic_open(&f, mp, path, "w", false, 0, 0);
+
+Finish:
+	EXT4_MP_UNLOCK(mp);
+	return r;
+}
+
+int ext4_dir_ch(struct ext4_mountpoint *mp, const char *path)
+{
+	int r;
+	ext4_file f;
+
+	if (!mp)
+		return ENOENT;
+
+	EXT4_MP_LOCK(mp);
+
+	r = ext4_generic_open(&f, mp, path, "r", false, 0, 0);
+	if (r != EOK)
+		goto Finish;
+
+	mp->cwd_inode = f.inode;
 
 Finish:
 	EXT4_MP_UNLOCK(mp);
