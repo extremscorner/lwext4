@@ -1458,6 +1458,12 @@ static int ext4_ftruncate_no_lock(ext4_file *file, uint64_t size)
 	/*Sync file size*/
 	file->fsize = ext4_inode_get_size(&file->mp->fs.sb, ref.inode);
 	if (file->fsize <= size) {
+		if (file->fsize < size) {
+			file->fsize = size;
+			ext4_inode_set_size(ref.inode, file->fsize);
+			ref.dirty = true;
+		}
+
 		r = EOK;
 		goto Finish;
 	}
@@ -1631,10 +1637,17 @@ int ext4_fread(ext4_file *file, void *buf, size_t size, size_t *rcnt)
 			fblock_count++;
 		}
 
-		r = ext4_blocks_get_direct(file->mp->fs.bdev, u8_buf, fblock_start,
-					   fblock_count);
-		if (r != EOK)
-			goto Finish;
+		/* Do we get an unwritten range? */
+		if (fblock_start != 0) {
+			r = ext4_blocks_get_direct(file->mp->fs.bdev, u8_buf, fblock_start,
+						   fblock_count);
+			if (r != EOK)
+				goto Finish;
+
+		} else {
+			/* Yes, we do. */
+			memset(u8_buf, 0, block_size * fblock_count);
+		}
 
 		size -= block_size * fblock_count;
 		u8_buf += block_size * fblock_count;
@@ -1648,15 +1661,21 @@ int ext4_fread(ext4_file *file, void *buf, size_t size, size_t *rcnt)
 	}
 
 	if (size) {
-		uint64_t off;
 		r = ext4_fs_get_inode_dblk_idx(&ref, iblock_idx, &fblock, true);
 		if (r != EOK)
 			goto Finish;
 
-		off = fblock * block_size;
-		r = ext4_block_readbytes(file->mp->fs.bdev, off, u8_buf, size);
-		if (r != EOK)
-			goto Finish;
+		/* Do we get an unwritten range? */
+		if (fblock != 0) {
+			uint64_t off = fblock * block_size;
+			r = ext4_block_readbytes(file->mp->fs.bdev, off, u8_buf, size);
+			if (r != EOK)
+				goto Finish;
+
+		} else {
+			/* Yes, we do. */
+			memset(u8_buf, 0, size);
+		}
 
 		file->fpos += size;
 
