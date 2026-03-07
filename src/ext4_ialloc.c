@@ -297,6 +297,7 @@ int ext4_ialloc_alloc_inode(struct ext4_fs *fs, uint32_t *idx, bool is_dir)
 				if (rc != EOK)
 					return rc;
 
+				++bgid;
 				continue;
 			}
 
