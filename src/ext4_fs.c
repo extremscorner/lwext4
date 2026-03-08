@@ -1465,13 +1465,6 @@ int ext4_fs_get_inode_dblk_idx(struct ext4_inode_ref *inode_ref,
 						   false, support_unwritten);
 }
 
-int ext4_fs_init_inode_dblk_idx(struct ext4_inode_ref *inode_ref,
-				ext4_lblk_t iblock, ext4_fsblk_t *fblock)
-{
-	return ext4_fs_get_inode_dblk_idx_internal(inode_ref, iblock, fblock,
-						   true, true);
-}
-
 static int ext4_fs_set_inode_data_block_index(struct ext4_inode_ref *inode_ref,
 				       ext4_lblk_t iblock, ext4_fsblk_t fblock)
 {
@@ -1637,6 +1630,45 @@ static int ext4_fs_set_inode_data_block_index(struct ext4_inode_ref *inode_ref,
 	return EOK;
 }
 
+
+int ext4_fs_init_inode_dblk_idx(struct ext4_inode_ref *inode_ref,
+				ext4_lblk_t iblock, ext4_fsblk_t *fblock)
+{
+	int rc = ext4_fs_get_inode_dblk_idx_internal(inode_ref, iblock, fblock,
+						     true, true);
+	if (rc != EOK || *fblock)
+		return rc;
+
+#if CONFIG_EXTENT_ENABLE && CONFIG_EXTENTS_ENABLE
+	/* Handle extents separately */
+	if ((ext4_sb_feature_incom(&inode_ref->fs->sb, EXT4_FINCOM_EXTENTS)) &&
+	    (ext4_inode_has_flag(inode_ref->inode, EXT4_INODE_FLAG_EXTENTS))) {
+		/* Not reachable */
+		return ENOTSUP;
+	}
+#endif
+
+	/* Allocate new physical block */
+	ext4_fsblk_t goal, phys_block;
+	rc = ext4_fs_indirect_find_goal(inode_ref, &goal);
+	if (rc != EOK)
+		return rc;
+
+	rc = ext4_balloc_alloc_block(inode_ref, goal, &phys_block);
+	if (rc != EOK)
+		return rc;
+
+	/* Add physical block address to the i-node */
+	rc = ext4_fs_set_inode_data_block_index(inode_ref, iblock, phys_block);
+	if (rc != EOK) {
+		ext4_balloc_free_block(inode_ref, phys_block);
+		return rc;
+	}
+
+	*fblock = phys_block;
+
+	return EOK;
+}
 
 int ext4_fs_append_inode_dblk(struct ext4_inode_ref *inode_ref,
 			      ext4_fsblk_t *fblock, ext4_lblk_t *iblock)

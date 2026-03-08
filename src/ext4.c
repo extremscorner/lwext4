@@ -1802,9 +1802,8 @@ int ext4_fwrite(ext4_file *file, const void *buf, size_t size, size_t *wcnt)
 
 			iblk_idx++;
 
-			if (!fblock_start) {
+			if (!fblock_start)
 				fblock_start = fblk;
-			}
 
 			if ((fblock_start + fblock_count) != fblk)
 				break;
@@ -1850,9 +1849,10 @@ int ext4_fwrite(ext4_file *file, const void *buf, size_t size, size_t *wcnt)
 				goto Finish;
 		} else {
 			r = ext4_fs_append_inode_dblk(&ref, &fblk, &iblk_idx);
-			if (r != EOK)
+			if (r != EOK) {
 				/*Node size sholud be updated.*/
 				goto out_fsize;
+			}
 		}
 
 		off = fblk * block_size;
