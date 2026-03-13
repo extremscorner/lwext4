@@ -194,6 +194,9 @@ uint32_t ext4_inodes_in_group_cnt(struct ext4_sblock *s, uint32_t bgid);
 
 /***************************Read/write/check superblock**********************/
 
+/**@brief   TODO:*/
+uint32_t ext4_sb_csum_seed(struct ext4_sblock *s);
+
 /**@brief   Superblock write.
  * @param   bdev block device descriptor.
  * @param   s superblock descriptor

@@ -757,6 +757,7 @@ int ext4_mkfs(struct ext4_fs *fs, struct ext4_blockdev *bd,
 	info->feat_incompat &= ~EXT4_FINCOM_META_BG;
 	info->feat_incompat &= ~EXT4_FINCOM_FLEX_BG;
 	info->feat_incompat &= ~EXT4_FINCOM_64BIT;
+	info->feat_incompat &= ~EXT4_FINCOM_CSUM_SEED;
 
 	info->feat_ro_compat &= ~EXT4_FRO_COM_METADATA_CSUM;
 	info->feat_ro_compat &= ~EXT4_FRO_COM_GDT_CSUM;
